@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, Calendar, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Loader2, Navigation, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/lib/supabase/client";
@@ -15,6 +16,12 @@ import {
   type Category,
   type PostType,
 } from "@/lib/domain";
+
+// Dynamically import MapPicker without SSR
+const MapPicker = dynamic(
+  () => import("@/components/map/map-picker").then((mod) => mod.MapPicker),
+  { ssr: false }
+);
 
 const HUES: Record<Category, number> = {
   electronics: 195,
@@ -37,6 +44,9 @@ export default function NewPostPage() {
   const [description, setDescription] = useState("");
   const [marks, setMarks] = useState("");
   const [location, setLocation] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [showMapPicker, setShowMapPicker] = useState(false);
   const [happenedAt, setHappenedAt] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -61,6 +71,8 @@ export default function NewPostPage() {
           description,
           marks,
           location_text: location,
+          latitude: latitude,
+          longitude: longitude,
           happened_at: happenedAt ? new Date(happenedAt).toISOString() : new Date().toISOString(),
           image_emoji: CATEGORY_EMOJI[category],
           image_hue: HUES[category],
@@ -174,28 +186,59 @@ export default function NewPostPage() {
           </p>
         </section>
 
+        {/* Location & Interactive Map Pin */}
         <section>
-          <Label>สถานที่</Label>
+          <div className="flex items-center justify-between">
+            <Label>สถานที่</Label>
+            <button
+              type="button"
+              onClick={() => setShowMapPicker(true)}
+              className="text-[12px] font-medium text-primary flex items-center gap-1 hover:underline cursor-pointer"
+            >
+              <Navigation className="size-3.5" />
+              {latitude && longitude ? "แก้ไขจุดปักหมุด" : "📍 ปักหมุดบนแผนที่"}
+            </button>
+          </div>
+
           <div className="mt-2 flex items-center gap-2 px-4 py-3 rounded-xl bg-surface border border-border">
-            <MapPin className="size-4 text-primary" />
+            <MapPin className="size-4 text-primary shrink-0" />
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="flex-1 bg-transparent text-[14px] focus:outline-none"
-              placeholder="เช่น BTS อโศก, กรุงเทพ"
+              className="flex-1 bg-transparent text-[14px] focus:outline-none text-foreground"
+              placeholder="เช่น หน้าตึก 15, โรงอาหารกลาง"
             />
           </div>
+
+          {/* If location has been pinned on map */}
+          {latitude && longitude && (
+            <div className="mt-2 flex items-center justify-between px-3 py-2 rounded-xl bg-primary-soft/60 border border-primary/20 text-[12px]">
+              <span className="flex items-center gap-1.5 text-primary font-medium">
+                📍 ปักหมุดพิกัดแล้ว ({latitude.toFixed(4)}, {longitude.toFixed(4)})
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setLatitude(null);
+                  setLongitude(null);
+                }}
+                className="text-muted-foreground hover:text-destructive flex items-center gap-1 cursor-pointer"
+              >
+                <Trash2 className="size-3" /> ลบหมุด
+              </button>
+            </div>
+          )}
         </section>
 
         <section>
           <Label>วันเวลาที่เกิดเหตุ</Label>
           <div className="mt-2 flex items-center gap-2 px-4 py-3 rounded-xl bg-surface border border-border">
-            <Calendar className="size-4 text-primary" />
+            <Calendar className="size-4 text-primary shrink-0" />
             <input
               type="datetime-local"
               value={happenedAt}
               onChange={(e) => setHappenedAt(e.target.value)}
-              className="flex-1 bg-transparent text-[14px] focus:outline-none"
+              className="flex-1 bg-transparent text-[14px] focus:outline-none text-foreground"
             />
           </div>
         </section>
@@ -217,6 +260,23 @@ export default function NewPostPage() {
           </button>
         </div>
       </form>
+
+      {/* Map Picker Modal */}
+      {showMapPicker && (
+        <MapPicker
+          initialLat={latitude}
+          initialLng={longitude}
+          initialAddress={location}
+          onSelect={(lat, lng, addressText) => {
+            setLatitude(lat);
+            setLongitude(lng);
+            if (addressText && !location) {
+              setLocation(addressText);
+            }
+          }}
+          onClose={() => setShowMapPicker(false)}
+        />
+      )}
     </AppShell>
   );
 }

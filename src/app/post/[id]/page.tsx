@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Suspense, useState } from "react";
+import dynamic from "next/dynamic";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
@@ -30,6 +31,11 @@ import {
   type PostStatus,
   type ProfileRow,
 } from "@/lib/domain";
+
+const PostMiniMap = dynamic(
+  () => import("@/components/map/post-mini-map").then((mod) => mod.PostMiniMap),
+  { ssr: false }
+);
 
 export default function PostDetailPage() {
   return (
@@ -230,6 +236,16 @@ function PostDetailContent() {
             value={happened}
           />
         </div>
+
+        {typeof post.latitude === "number" && typeof post.longitude === "number" && (
+          <PostMiniMap
+            lat={post.latitude}
+            lng={post.longitude}
+            title={post.title}
+            type={post.type}
+            locationText={post.location_text}
+          />
+        )}
 
         <section>
           <h2 className="font-semibold mb-2">รายละเอียด</h2>

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { MapPin, Sparkles, Filter, LogIn } from "lucide-react";
+import dynamic from "next/dynamic";
+import { MapPin, Sparkles, LogIn, LayoutList, Map as MapIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { PostCard } from "@/components/post-card";
@@ -15,6 +16,19 @@ import {
   type Category,
 } from "@/lib/domain";
 
+// Dynamically import PostsMapView with ssr: false
+const PostsMapView = dynamic(
+  () => import("@/components/map/posts-map-view").then((mod) => mod.PostsMapView),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[65vh] w-full rounded-2xl bg-muted animate-pulse flex items-center justify-center text-muted-foreground text-[13px]">
+        กำลังโหลดแผนที่...
+      </div>
+    ),
+  }
+);
+
 const FILTERS = [
   { id: "all", label: "ทั้งหมด" },
   { id: "lost", label: "ของหาย" },
@@ -24,6 +38,7 @@ const FILTERS = [
 export default function FeedPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
   const [category, setCategory] = useState<Category | "all">("all");
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const { profile, session } = useAuth();
 
   const { data: posts = [], isLoading } = useQuery({
@@ -66,12 +81,12 @@ export default function FeedPage() {
             )}
           </div>
 
-          <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-none">
+          <div className="px-4 pb-3 flex items-center gap-2 overflow-x-auto scrollbar-none">
             {FILTERS.map((f) => (
               <button
                 key={f.id}
                 onClick={() => setFilter(f.id)}
-                className={`px-4 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap border transition ${
+                className={`px-4 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap border transition cursor-pointer ${
                   filter === f.id
                     ? "bg-foreground text-background border-foreground"
                     : "bg-surface text-muted-foreground border-border"
@@ -80,8 +95,31 @@ export default function FeedPage() {
                 {f.label}
               </button>
             ))}
-            <div className="ml-auto flex items-center gap-1 px-3 rounded-full bg-surface border border-border text-[12px] text-muted-foreground">
-              <Filter className="size-3" /> ตัวกรอง
+
+            {/* View Mode Toggle: List vs Map */}
+            <div className="ml-auto flex items-center bg-muted p-0.5 rounded-full border border-border shrink-0">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`flex items-center gap-1 px-3 py-1 rounded-full text-[12px] font-medium transition cursor-pointer ${
+                  viewMode === "list"
+                    ? "bg-surface text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                aria-label="มุมมองรายการ"
+              >
+                <LayoutList className="size-3.5" /> รายการ
+              </button>
+              <button
+                onClick={() => setViewMode("map")}
+                className={`flex items-center gap-1 px-3 py-1 rounded-full text-[12px] font-medium transition cursor-pointer ${
+                  viewMode === "map"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                aria-label="มุมมองแผนที่"
+              >
+                <MapIcon className="size-3.5" /> แผนที่
+              </button>
             </div>
           </div>
         </header>
@@ -124,12 +162,20 @@ export default function FeedPage() {
         </div>
       </section>
 
+      {/* Main Content: List or Map View */}
       <section className="px-4 pt-6 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-foreground">ประกาศ ({posts.length})</h2>
-          <span className="text-[12px] text-muted-foreground">ใหม่ล่าสุด</span>
+          <h2 className="font-semibold text-foreground">
+            {viewMode === "map" ? "แผนที่พิกัดประกาศ" : `ประกาศ (${posts.length})`}
+          </h2>
+          <span className="text-[12px] text-muted-foreground">
+            {viewMode === "map" ? "แตะหมุดเพื่อดูข้อมูล" : "ใหม่ล่าสุด"}
+          </span>
         </div>
-        {isLoading ? (
+
+        {viewMode === "map" ? (
+          <PostsMapView posts={posts} />
+        ) : isLoading ? (
           <div className="space-y-3">
             {[0, 1, 2].map((i) => (
               <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />
@@ -161,7 +207,7 @@ function CategoryPill({
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 flex flex-col items-center justify-center gap-1 w-[72px] h-[78px] rounded-2xl border transition ${
+      className={`shrink-0 flex flex-col items-center justify-center gap-1 w-[72px] h-[78px] rounded-2xl border transition cursor-pointer ${
         active
           ? "bg-primary text-primary-foreground border-primary shadow-[var(--shadow-pop)]"
           : "bg-surface text-foreground border-border"
