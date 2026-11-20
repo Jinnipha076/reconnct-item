@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { Home, Search, PlusCircle, User } from "lucide-react";
+import { Home, Search, PlusCircle, MessageSquare, User } from "lucide-react";
 
 interface AppShellProps {
   children: ReactNode;
@@ -31,13 +31,14 @@ function BottomTabs() {
     { href: "/", label: "ฟีด", icon: Home, match: (p: string) => p === "/" },
     { href: "/search", label: "ค้นหา", icon: Search, match: (p: string) => p.startsWith("/search") },
     { href: "/new", label: "โพสต์", icon: PlusCircle, primary: true, match: (p: string) => p.startsWith("/new") },
+    { href: "/chat", label: "แชท", icon: MessageSquare, match: (p: string) => p.startsWith("/chat") },
     { href: "/profile", label: "โปรไฟล์", icon: User, match: (p: string) => p.startsWith("/profile") },
   ];
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30">
       <div className="mx-3 mb-3 rounded-2xl bg-surface/95 backdrop-blur border border-border shadow-[var(--shadow-card)]">
-        <ul className="grid grid-cols-4">
+        <ul className="grid grid-cols-5">
           {tabs.map((t) => {
             const active = t.match(pathname || "/");
             const Icon = t.icon;
