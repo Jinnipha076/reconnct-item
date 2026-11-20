@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { Home, Search, PlusCircle, MessageSquare, User } from "lucide-react";
+import {
+  ChibiHomeIcon,
+  ChibiSearchIcon,
+  ChibiPostIcon,
+  ChibiChatIcon,
+  ChibiProfileIcon,
+} from "@/components/chibi-icons";
 
 interface AppShellProps {
   children: ReactNode;
@@ -28,43 +34,47 @@ export function AppShell({ children, hideTabs, topBar }: AppShellProps) {
 function BottomTabs() {
   const pathname = usePathname();
   const tabs = [
-    { href: "/", label: "ฟีด", icon: Home, match: (p: string) => p === "/" },
-    { href: "/search", label: "ค้นหา", icon: Search, match: (p: string) => p.startsWith("/search") },
-    { href: "/new", label: "โพสต์", icon: PlusCircle, primary: true, match: (p: string) => p.startsWith("/new") },
-    { href: "/chat", label: "แชท", icon: MessageSquare, match: (p: string) => p.startsWith("/chat") },
-    { href: "/profile", label: "โปรไฟล์", icon: User, match: (p: string) => p.startsWith("/profile") },
+    { href: "/", label: "ฟีด", icon: ChibiHomeIcon, match: (p: string) => p === "/" },
+    { href: "/search", label: "ค้นหา", icon: ChibiSearchIcon, match: (p: string) => p.startsWith("/search") },
+    { href: "/new", label: "โพสต์", icon: ChibiPostIcon, isSpecial: true, match: (p: string) => p.startsWith("/new") },
+    { href: "/chat", label: "แชท", icon: ChibiChatIcon, match: (p: string) => p.startsWith("/chat") },
+    { href: "/profile", label: "โปรไฟล์", icon: ChibiProfileIcon, match: (p: string) => p.startsWith("/profile") },
   ];
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30">
-      <div className="mx-3 mb-3 rounded-2xl bg-surface/95 backdrop-blur border border-border shadow-[var(--shadow-card)]">
-        <ul className="grid grid-cols-5">
+      <div className="mx-3 mb-3 px-1 py-1.5 rounded-2xl bg-surface/95 backdrop-blur-md border border-border shadow-[var(--shadow-card)]">
+        <ul className="grid grid-cols-5 items-center">
           {tabs.map((t) => {
             const active = t.match(pathname || "/");
             const Icon = t.icon;
-            if (t.primary) {
-              return (
-                <li key={t.href} className="flex justify-center -mt-5">
-                  <Link
-                    href={t.href}
-                    className="size-14 rounded-2xl bg-primary text-primary-foreground flex flex-col items-center justify-center shadow-[var(--shadow-pop)] active:scale-95 transition"
-                    aria-label={t.label}
-                  >
-                    <Icon className="size-6" />
-                  </Link>
-                </li>
-              );
-            }
             return (
-              <li key={t.href}>
+              <li key={t.href} className="flex justify-center">
                 <Link
                   href={t.href}
-                  className={`flex flex-col items-center justify-center gap-1 py-3 text-[11px] transition ${
-                    active ? "text-primary font-semibold" : "text-muted-foreground"
+                  className={`w-full flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all duration-200 group active:scale-90 ${
+                    active
+                      ? "text-primary font-bold"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <Icon className="size-5" />
-                  {t.label}
+                  <div
+                    className={`transition-transform duration-200 group-hover:scale-110 ${
+                      t.isSpecial ? "scale-105" : ""
+                    } ${active ? "scale-110" : ""}`}
+                  >
+                    <Icon active={active} className="size-6" />
+                  </div>
+                  <span
+                    className={`text-[11px] leading-tight tracking-tight mt-1 transition-all ${
+                      active ? "font-bold text-primary" : "font-medium"
+                    }`}
+                  >
+                    {t.label}
+                  </span>
+                  {active && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary mt-0.5 animate-pulse" />
+                  )}
                 </Link>
               </li>
             );
