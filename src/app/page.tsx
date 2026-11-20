@@ -10,6 +10,7 @@ import { PostCard } from "@/components/post-card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { COMMUNITY_POSTS } from "@/lib/community-posts";
 import {
   CATEGORIES,
   CATEGORY_EMOJI,
@@ -55,7 +56,16 @@ export default function FeedPage() {
       if (category !== "all") q = q.eq("category", category);
       const { data, error } = await q;
       if (error) throw error;
-      return data;
+
+      // Filter community posts
+      const filteredCommunity = COMMUNITY_POSTS.filter((p) => {
+        if (filter !== "all" && p.type !== filter) return false;
+        if (category !== "all" && p.category !== category) return false;
+        return true;
+      });
+
+      // Combine user's Supabase posts + community posts
+      return [...(data || []), ...filteredCommunity];
     },
   });
 

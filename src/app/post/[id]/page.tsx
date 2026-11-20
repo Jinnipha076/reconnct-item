@@ -25,6 +25,7 @@ import { ClaimModal } from "@/components/claim-modal";
 import { findSmartMatches } from "@/lib/smart-match";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { COMMUNITY_POSTS, COMMUNITY_PROFILES } from "@/lib/community-posts";
 import {
   CATEGORY_EMOJI,
   CATEGORY_LABEL,
@@ -69,6 +70,14 @@ function PostDetailContent() {
     queryKey: ["post", id],
     enabled: !!id,
     queryFn: async () => {
+      // 1. Check if it's a community post
+      const commPost = COMMUNITY_POSTS.find((p) => p.id === id);
+      if (commPost) {
+        const commProfile = COMMUNITY_PROFILES[commPost.user_id] || null;
+        return { post: commPost, profile: commProfile };
+      }
+
+      // 2. Otherwise query Supabase
       const { data: post, error } = await supabase
         .from("posts")
         .select("*")
@@ -85,7 +94,7 @@ function PostDetailContent() {
     },
   });
 
-  // Query other posts for AI smart matching
+  // Query other posts for AI smart matching (combines Supabase + Community)
   const { data: allPosts = [] } = useQuery({
     queryKey: ["posts-for-matching"],
     queryFn: async () => {
@@ -94,7 +103,7 @@ function PostDetailContent() {
         .select("*")
         .eq("is_hidden", false)
         .limit(60);
-      return (data || []) as PostRow[];
+      return [...(data || []), ...COMMUNITY_POSTS] as PostRow[];
     },
   });
 

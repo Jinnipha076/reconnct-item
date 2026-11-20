@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { PostCard } from "@/components/post-card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { supabase } from "@/lib/supabase/client";
+import { COMMUNITY_POSTS } from "@/lib/community-posts";
 
 export default function SearchPage() {
   const [q, setQ] = useState("");
@@ -14,7 +15,7 @@ export default function SearchPage() {
   const { data: results = [], isLoading } = useQuery({
     queryKey: ["search", q],
     queryFn: async () => {
-      const term = q.trim();
+      const term = q.trim().toLowerCase();
       let query = supabase
         .from("posts")
         .select("*")
@@ -29,7 +30,18 @@ export default function SearchPage() {
       }
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+
+      // Filter community posts
+      const filteredCommunity = COMMUNITY_POSTS.filter((p) => {
+        if (!term) return true;
+        return (
+          p.title.toLowerCase().includes(term) ||
+          p.description.toLowerCase().includes(term) ||
+          p.location_text.toLowerCase().includes(term)
+        );
+      });
+
+      return [...(data || []), ...filteredCommunity];
     },
   });
 
