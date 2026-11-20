@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { PostCard } from "@/components/post-card";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { supabase } from "@/lib/supabase/client";
 
 export default function SearchPage() {
@@ -38,7 +39,10 @@ export default function SearchPage() {
     <AppShell
       topBar={
         <header className="px-4 pt-5 pb-3 space-y-3 bg-background border-b border-border">
-          <h1 className="text-[20px] font-bold">ค้นหา</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-[20px] font-bold">ค้นหา</h1>
+            <ThemeToggle />
+          </div>
           <div className="flex items-center gap-2">
             <div className="flex-1 flex items-center gap-2 px-4 h-11 rounded-xl bg-surface border border-border focus-within:border-primary">
               <SearchIcon className="size-4 text-muted-foreground" />

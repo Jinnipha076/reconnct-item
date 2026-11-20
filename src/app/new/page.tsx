@@ -2,8 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, Calendar, Loader2, Navigation, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  MapPin,
+  Calendar,
+  Loader2,
+  Navigation,
+  Trash2,
+  Camera,
+  Image as ImageIcon,
+  X,
+} from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
@@ -37,6 +47,7 @@ const HUES: Record<Category, number> = {
 
 export default function NewPostPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { userId, loading } = useAuth();
   const [type, setType] = useState<PostType>("lost");
   const [category, setCategory] = useState<Category>("electronics");
@@ -46,6 +57,7 @@ export default function NewPostPage() {
   const [location, setLocation] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [happenedAt, setHappenedAt] = useState("");
   const [busy, setBusy] = useState(false);
@@ -55,6 +67,24 @@ export default function NewPostPage() {
       router.push("/auth");
     }
   }, [loading, userId, router]);
+
+  // Handle image file selection
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("ขนาดไฟล์ภาพต้องไม่เกิน 5 MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageUrl(reader.result as string);
+      toast.success("อัปโหลดรูปภาพตัวอย่างแล้ว");
+    };
+    reader.readAsDataURL(file);
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,6 +106,7 @@ export default function NewPostPage() {
           happened_at: happenedAt ? new Date(happenedAt).toISOString() : new Date().toISOString(),
           image_emoji: CATEGORY_EMOJI[category],
           image_hue: HUES[category],
+          image_url: imageUrl,
         })
         .select("id")
         .single();
@@ -121,6 +152,62 @@ export default function NewPostPage() {
               desc="ฉันพบของและอยากส่งคืน"
             />
           </div>
+        </section>
+
+        {/* Real Photo Upload Section */}
+        <section>
+          <div className="flex items-center justify-between">
+            <Label>รูปภาพสิ่งของ</Label>
+            <span className="text-[11.5px] text-muted-foreground">
+              {imageUrl ? "มีรูปภาพแล้ว" : "ภาพถ่ายจริงช่วยให้พบของง่ายขึ้น"}
+            </span>
+          </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+            accept="image/*"
+            className="hidden"
+          />
+
+          {imageUrl ? (
+            <div className="relative mt-2 h-44 w-full rounded-2xl overflow-hidden border border-border bg-surface group">
+              <img src={imageUrl} alt="ตัวอย่างรูปภาพ" className="size-full object-cover" />
+              <button
+                type="button"
+                onClick={() => setImageUrl(null)}
+                className="absolute top-2.5 right-2.5 size-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 cursor-pointer shadow-md"
+                aria-label="ลบรูปภาพ"
+              >
+                <X className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-2.5 right-2.5 h-8 px-3 rounded-full bg-surface/90 backdrop-blur border border-border text-[12px] font-medium text-foreground flex items-center gap-1.5 hover:bg-surface cursor-pointer shadow-md"
+              >
+                <Camera className="size-3.5 text-primary" /> เปลี่ยนรูป
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="mt-2 h-28 w-full rounded-2xl border-2 border-dashed border-border hover:border-primary/50 bg-surface/50 hover:bg-primary-soft/20 flex flex-col items-center justify-center gap-2 cursor-pointer transition"
+            >
+              <div className="size-10 rounded-full bg-primary-soft text-primary flex items-center justify-center">
+                <Camera className="size-5" />
+              </div>
+              <div className="text-center">
+                <p className="text-[13px] font-semibold text-foreground">
+                  แตะเพื่อถ่ายรูป หรือเลือกไฟล์ภาพ
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  (หากไม่เลือก จะใช้อีโมจิ {CATEGORY_EMOJI[category]} ประจำหมวดหมู่)
+                </p>
+              </div>
+            </div>
+          )}
         </section>
 
         <section>

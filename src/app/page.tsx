@@ -7,6 +7,7 @@ import { MapPin, Sparkles, LogIn, LayoutList, Map as MapIcon } from "lucide-reac
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { PostCard } from "@/components/post-card";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -71,14 +72,17 @@ export default function FeedPage() {
                 {profile ? `สวัสดี, ${profile.display_name} 👋` : "Reunite 🤝"}
               </h1>
             </div>
-            {!session && (
-              <Link
-                href="/auth"
-                className="h-10 px-4 rounded-full bg-primary text-primary-foreground text-[13px] font-medium flex items-center gap-1.5"
-              >
-                <LogIn className="size-4" /> เข้าสู่ระบบ
-              </Link>
-            )}
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              {!session && (
+                <Link
+                  href="/auth"
+                  className="h-9 px-3.5 rounded-full bg-primary text-primary-foreground text-[12.5px] font-medium flex items-center gap-1.5 shadow-sm"
+                >
+                  <LogIn className="size-3.5" /> เข้าสู่ระบบ
+                </Link>
+              )}
+            </div>
           </div>
 
           <div className="px-4 pb-3 flex items-center gap-2 overflow-x-auto scrollbar-none">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MessageSquare, LogIn, Clock, ArrowRight, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase/client";
 import { relativeTime, type PostRow, type CommentRow } from "@/lib/domain";
@@ -98,8 +99,11 @@ export default function ChatListPage() {
                 พื้นที่พูดคุยและนัดหมายส่งคืนของ
               </p>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-soft text-primary text-[12px] font-medium">
-              <ShieldCheck className="size-3.5" /> ปลอดภัย
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-soft text-primary text-[12px] font-medium">
+                <ShieldCheck className="size-3.5" /> ปลอดภัย
+              </div>
             </div>
           </div>
         </header>

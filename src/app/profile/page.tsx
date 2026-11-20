@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { PostCard } from "@/components/post-card";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase/client";
 import { initialsOf } from "@/lib/domain";
@@ -72,6 +73,7 @@ export default function ProfilePage() {
       topBar={
         <header className="px-4 pt-5 pb-3 flex items-center justify-between">
           <h1 className="text-[20px] font-bold">โปรไฟล์</h1>
+          <ThemeToggle />
         </header>
       }
     >
